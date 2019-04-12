@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS `products`(
 
 CREATE TABLE IF NOT EXISTS `anomalies`(
 	`cid` TEXT NOT NULL,
-	`revision` INT NOT NULL
+	`revison` INT NOT NULL
 );
