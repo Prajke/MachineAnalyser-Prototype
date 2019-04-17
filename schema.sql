@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS `products`(
-	`cid`	TEXT NOT NULL,
-	`revison`	INT NOT NULL,
+	`cid`	INT NOT NULL UNIQUE,
   `meanDoc`	INT NOT NULL,
 	`meanPop`	INT NOT NULL,
 	`meanChild`	INT NOT NULL,
@@ -10,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `products`(
 	`minDoc`	INT NOT NULL,
 	`minPop`	INT NOT NULL,
 	`minChild`	INT NOT NULL,
-	`totalComponents` INT NOT NULL
+	`nrComponents` INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `anomalies`(

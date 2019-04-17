@@ -34,3 +34,16 @@ for id in uniquecompid:
     #variance = pd.DataFrame({'Max Thalach' : [df_normalvalues.thalach.max()], 'Min Thalach' : [df_normalvalues.thalach.min()],
                           #   'Max Age': [df_normalvalues.age.max()],  'Min Age' : [df_normalvalues.age.min()]})
     print(variance)
+
+
+"""
+if validate_product():
+     if !(nr_comp()):
+        uppdate_bounderies()
+else:
+    update_bounderies()
+
+if check_bounderies():
+        var +=1
+
+"""

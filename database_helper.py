@@ -20,80 +20,112 @@ class database:
 ################################################################################
     #Validates if a componet exisits in the referencelibrary. If the component
     #exsists the function returns True, otherwise False.
-    def validateProduct(self, cid, rev):
-        sql = "SELECT COUNT(1) FROM products WHERE cid = ? AND revison = ? "
-        val = (cid, rev)
-        self.cursor.execute(sql, val)
-        row = self.cursor.fetchone()
-        if row == 1:
-            return True
-        else:
-            return False
+    def validateProduct(self, cid):
+        try:
+            sql = "SELECT * FROM products WHERE cid = ?"
+            val = (cid,)
+            self.cursor.execute(sql,val)
+            row = self.cursor.fetchone()
+            if row == None:
+                return False
+            else:
+                return True
+        except:
+            return 0
 
 ################################################################################
 ################################################################################
     #Validates a components bounderies. If the bounderies are within the
     #bounderies set in the referencelibrary, the function returns True,
     #otherwise false.
-    def validateBounderies(self, cid, rev, doc, pop, child):
-        product = getProduct(self, cid, rev)
-        if ( doc >= product["minDoc"] or doc <= product["maxDoc"] or
-             pop >= product["minPop"] or pop <= product["maxPop"] or
-             child >= product["minChild"] or child <= product["popChild"]):
-            return True
-        else:
-            return False
+    def validateBounderies(self, cid, data):
+        try:
+            component = self.getProduct(cid)
+            if ( (data["doc"] >= component["minDoc"] or data["doc"] <= component["maxDoc"]) and
+                 (data["pop"] >= component["minPop"] or data["pop"] <= component["maxPop"]) and
+                 (data["child"] >= component["minChild"] or data["child"] <= component["maxChild"])):
+                return True
+            else:
+                return False
+        except:
+            return 0
 
 ################################################################################
 ################################################################################
     #Adds a component to the referencelibrary.
     def addProduct(self,data):
-        print ("hej")
+        try:
+            sql = "INSERT INTO products(cid, meanDoc,meanPop,meanChild,maxDoc,maxPop,maxChild,minDoc,minPop,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+            values = (data['cid'], data['meanDoc'],data['meanPop'],data['meanChild'],data['maxDoc'],data['maxPop'],data['maxChild'],data['minDoc'],data['minPop'],data['minChild'],data['nrComponents'])
+            self.cursor.execute(sql,values)
+            self.db.commit()
+            return True
+        except:
+            return 0
 
 ################################################################################
 ################################################################################
     #Extracts a component from the referencelibrary. Returns a dictionary
     #containg component bounderies and mean-values for the different features.
-    def getProduct(self, cid, rev):
-        sql = "SELECT * FROM products WHERE cid = ? AND revison = ? "
-        val = (cid, rev)
-        self.cursor.execute(sql, val)
-        row = self.cursor.fetchone()
-        if row == None:
-            product = []
-            return product
-        product = {
-            "cid":row[0],
-            "revison":row[1],
-            "meanDoc":row[2],
-            "meanPop": row[3],
-            "meanChild": row[4],
-            "maxDoc": row[5],
-            "maxPop": row[6],
-            "maxChild": row[7],
-            "minDoc": row[8],
-            "minPop": row[9],
-            "minChild": row[10]
-        }
-        return product
-################################################################################
-################################################################################
-    def insertAnonmaly(self, cid, rev):
+    def getProduct(self, cid):
         try:
-            sql = "INSERT INTO anomalies(cid, revison) VALUES(cid,rev)"
-            self.cursor.execute(sql)
-            return 1
+            sql = "SELECT * FROM products WHERE cid = ?"
+            val = (cid,)
+            self.cursor.execute(sql, val)
+            row = self.cursor.fetchone()
+            if row == None:
+                product = []
+                return product
+            product = {
+                "cid":row[0],
+                "meanDoc":row[1],
+                "meanPop": row[2],
+                "meanChild": row[3],
+                "maxDoc": row[4],
+                "maxPop": row[5],
+                "maxChild": row[6],
+                "minDoc": row[7],
+                "minPop": row[8],
+                "minChild": row[9],
+                "nrComponents": row[10]
+            }
+            return product
+        except:
+            return 0
+
+################################################################################
+################################################################################
+    def validateComponentAmount(self,cid,var):
+        try:
+            sql = "SELECT * FROM products WHERE cid = ?"
+            val = (cid,)
+            self.cursor.execute(sql,val)
+            row = self.cursor.fetchone()
+            if row[0] < var:
+                return True
+            else:
+                return False
         except:
             return 0
 ################################################################################
 ################################################################################
-    def getAnomalies(self, cid=None, rev=None):
-        if (cid==None or rev==None):
+    def insertAnonmaly(self, cid):
+        try:
+            sql = "INSERT INTO anomalies(cid) VALUES(?)"
+            values = (cid)
+            self.cursor.execute(sql,values)
+            return True
+        except:
+            return 0
+################################################################################
+################################################################################
+    def getAnomalies(self, cid=None):
+        if (cid==None):
             sql = "SELECT * FROM anomalies"
         else:
-            sql = "SELECT * FROM anomalies WHERE cid = ? AND revison = ? "
+            sql = "SELECT * FROM anomalies WHERE cid = ?"
         try:
-            val = (cid, rev)
+            val = (cid)
             self.cursor.execute(sql,val)
             data = self.cursor.fetchall()
             return data
@@ -101,15 +133,15 @@ class database:
             return 0
 ################################################################################
 ################################################################################
-    def deleteAnomalies(self, cid=None, rev=None ):
-        if(cid==None or rev==None):
+    def deleteAnomalies(self, cid=None ):
+        if(cid==None):
             sql= "TRUNCATE TABLE anomalies"
         else:
-            sql = "DELETE FROM anomalies WHERE cid = ? AND revison = ?"
+            sql = "DELETE FROM anomalies WHERE cid = ?"
         try:
-            val = (cid, rev)
+            val = (cid)
             self.cursor.execute(sql,val)
             data = self.cursor.fetchall()
-            return 1
+            return True
         except:
             return 0
