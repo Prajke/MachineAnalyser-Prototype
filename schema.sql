@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS `products`(
 	`cid`	INT NOT NULL UNIQUE,
-  `meanDoc`	INT NOT NULL,
-	`meanPop`	INT NOT NULL,
+  	`meanDoc`	INT NOT NULL,
+	`meanBom`	INT NOT NULL,
 	`meanChild`	INT NOT NULL,
 	`maxDoc`	INT NOT NULL,
-	`maxPop`	INT NOT NULL,
+	`maxBom`	INT NOT NULL,
 	`maxChild`	INT NOT NULL,
 	`minDoc`	INT NOT NULL,
-	`minPop`	INT NOT NULL,
+	`minBom`	INT NOT NULL,
 	`minChild`	INT NOT NULL,
 	`nrComponents` INT NOT NULL
 );

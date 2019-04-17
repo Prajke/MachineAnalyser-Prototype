@@ -6,7 +6,7 @@ def test_validateProduct(db):
 def test_validateBounderies(db):
     data = {
     "doc":7,
-    "pop":7,
+    "bom":7,
     "child":7
     }
     return db.validateBounderies(1,data)
@@ -15,13 +15,13 @@ def test_addProduct(db):
     product = {
         "cid":1,
         "meanDoc":3,
-        "meanPop": 3,
+        "meanBom": 3,
         "meanChild": 3,
         "maxDoc": 6,
-        "maxPop": 6,
+        "maxBom": 6,
         "maxChild": 6,
         "minDoc": 2,
-        "minPop": 2,
+        "minBom": 2,
         "minChild": 2,
         "nrComponents": 12
     }

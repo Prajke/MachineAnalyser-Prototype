@@ -42,7 +42,7 @@ class database:
         try:
             component = self.getProduct(cid)
             if ( (data["doc"] >= component["minDoc"] or data["doc"] <= component["maxDoc"]) and
-                 (data["pop"] >= component["minPop"] or data["pop"] <= component["maxPop"]) and
+                 (data["bom"] >= component["minBom"] or data["bom"] <= component["maxBom"]) and
                  (data["child"] >= component["minChild"] or data["child"] <= component["maxChild"])):
                 return True
             else:
@@ -55,8 +55,8 @@ class database:
     #Adds a component to the referencelibrary.
     def addProduct(self,data):
         try:
-            sql = "INSERT INTO products(cid, meanDoc,meanPop,meanChild,maxDoc,maxPop,maxChild,minDoc,minPop,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-            values = (data['cid'], data['meanDoc'],data['meanPop'],data['meanChild'],data['maxDoc'],data['maxPop'],data['maxChild'],data['minDoc'],data['minPop'],data['minChild'],data['nrComponents'])
+            sql = "INSERT INTO products(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+            values = (data['cid'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
             self.cursor.execute(sql,values)
             self.db.commit()
             return True
@@ -79,13 +79,13 @@ class database:
             product = {
                 "cid":row[0],
                 "meanDoc":row[1],
-                "meanPop": row[2],
+                "meanBom": row[2],
                 "meanChild": row[3],
                 "maxDoc": row[4],
-                "maxPop": row[5],
+                "maxBom": row[5],
                 "maxChild": row[6],
                 "minDoc": row[7],
-                "minPop": row[8],
+                "minBom": row[8],
                 "minChild": row[9],
                 "nrComponents": row[10]
             }
@@ -107,6 +107,11 @@ class database:
                 return False
         except:
             return 0
+################################################################################
+################################################################################
+    def changeComponentBounderies(self):
+        print( "HELLO")
+
 ################################################################################
 ################################################################################
     def insertAnonmaly(self, cid):
