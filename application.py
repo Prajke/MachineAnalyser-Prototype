@@ -6,14 +6,25 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
 import database_helper as dbh
+import time
+
 
 def MachineAnalyse(machinedata):
     db = dbh.database()
     datapool = pd.read_csv("exData.csv")
+    start_summarize = time.time()
     listofcomponents = summarize_components(machinedata)
+    time_summarize = time.time() - start_summarize
     datapool.loc[datapool['cid'] == 0, 'cid'] = 1008803013
+    datapool.loc[datapool['cid'] == 1, 'cid'] = 1008803050
+    datapool.loc[datapool['cid'] == 2, 'cid'] = 1008802058
+    datapool.loc[datapool['cid'] == 3, 'cid'] = 1008802060
+    datapool.loc[datapool['cid'] == 4, 'cid'] = 1008802061
+
     #listofcomponents = machinedata
     completecomponents = 0
+    time_model = 0
+    start_comploop = time.time()
     for id in listofcomponents.cid.values:
         #Kollar ifall komponenten finns i referensbibloteket
         componentpool = datapool[datapool.cid == id]
@@ -24,14 +35,21 @@ def MachineAnalyse(machinedata):
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
             if  db.validateComponentAmount(id,len(componentpool)) :
+                start_model = time.time()
                 update_variance(componentpool, currcomponent,db)
-
+                time_model += ( time.time() - start_model)
             if db.validateBounderies(id, currcomponent):
                 completecomponents += 1
         else:
+            start_model = time.time()
             update_variance(componentpool, currcomponent,db)
+            time_model += (time.time() - start_model)
             if db.validateBounderies(id, currcomponent):
                 completecomponents += 1
+    time_comploop = time.time() - start_comploop
+    print("Comploop time: " + str(time_comploop-time_model))
+    print("Summarize time: " + str(time_summarize))
+    print("Model time: " + str(time_model))
     return round((completecomponents/len(listofcomponents)),2)
 
 def summarize_components(data):
