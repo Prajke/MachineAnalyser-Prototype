@@ -5,33 +5,33 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
+import database_helper as dbh
 
 def MachineAnalyse(machinedata):
-    datapool = pd.read_csv("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/exData.csv")
+    db = dbh.database()
+    datapool = pd.read_csv("exData.csv")
     listofcomponents = summarize_components(machinedata)
+    #listofcomponents = machinedata
     completecomponents = 0
-
     for id in listofcomponents.cid.values:
         #Kollar ifall komponenten finns i referensbibloteket
         componentpool = datapool[datapool.cid == id]
         currcomponent = listofcomponents[listofcomponents.cid == id]
-
-        if validate_component(id) :
+        if db.validateComponent(id):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
 
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
-            if  validate_componentamount(len(componentpool), id) :
-                update_variance(componentpool, currcomponent)
+            if  db.validateComponentAmount(id,len(componentpool)) :
+                update_variance(componentpool, currcomponent,db)
 
-            if compare_component(id, currcomponent):
+            if db.validateBounderies(id, currcomponent):
                 completecomponents += 1
         else:
-            update_variance(componentpool, currcomponent)
-            if compare_component(id, currcomponent):
+            update_variance(componentpool, currcomponent,db)
+            if db.validateBounderies(id, currcomponent):
                 completecomponents += 1
-
-    return (completecomponents/listofcomponents.length())
+    return round((completecomponents/len(listofcomponents)),2)
 
 def summarize_components(data):
     machinedata = data.iloc[4:]
@@ -51,24 +51,24 @@ def summarize_components(data):
         })
         rows_list.append(row)
     componentdata = pd.DataFrame( rows_list , columns = [ "bomitem", "depth", "leaves", "documents"])
-    componentdata['cid'] = uniquecomponents
+    componentdata['cid'] = uniquecomponents.astype(int)
     return componentdata
 
-def update_variance(componentpool, currcomponent):
+def update_variance(componentpool, currcomponent,db):
     #Extraherar liknande komponenter från datapoolen
-    componentpool = componentpool.append(pd.DataFrame(currcomponent, columns =[ 'cid','bomitem','leaves', 'documents']))
+    #componentpool = componentpool.append(pd.DataFrame(currcomponent, columns =[ 'cid','bomitem','leaves', 'documents']))
 
 
     if len(componentpool) > 1:
-        X = componentpool.loc[0:,['bomitem','leaves', 'documents']]
+        #X = componentpool.loc[0:,['bomitem','leaves', 'documents']]
         #Local Outlier Factor
         model = LocalOutlierFactor(n_neighbors=20)
         #IsolationForest(n_estimators=100, max_samples='auto')
         #DBSCAN(eps=3, metric='euclidean', min_samples=3)
         #model.fit(X)
-        lof_result = model.fit_predict(X)
-        df_anomalyvalues = X[lof_result == -1]
-        df_normalvalues = X[lof_result != -1]
+        lof_result = model.fit_predict(componentpool)
+        df_anomalyvalues = componentpool[lof_result == -1]
+        df_normalvalues = componentpool[lof_result != -1]
 
     else :
         df_normalvalues = currcomponent
@@ -76,21 +76,20 @@ def update_variance(componentpool, currcomponent):
     #Skapa en dikt som skickas in till referensbibloteket, baserat på resultatet från modellen
 
     variance = {
-    "cid" : currcomponent.cid[0],
-    "MaxBOMItem": df_normalvalues.bomitem.max(),
-    "MinBOMItem":df_normalvalues.bomitem.min(),
+    "cid" : int(currcomponent.cid.values[0]),
+    "MaxBOMItem": int(df_normalvalues.bomitem.max()),
+    "MinBOMItem":int(df_normalvalues.bomitem.min()),
     "MeanBOMItem":int(round(df_normalvalues.bomitem.mean(),0)),
-    "MaxLeaves": df_normalvalues.leaves.max(),
-    "MinLeaves":df_normalvalues.leaves.min(),
+    "MaxLeaves": int(df_normalvalues.leaves.max()),
+    "MinLeaves":int(df_normalvalues.leaves.min()),
     "MeanLeaves":int(round(df_normalvalues.leaves.mean(),0)),
-    "MaxDocuments": df_normalvalues.documents.max(),
-    "MinDocuments": df_normalvalues.documents.min(),
+    "MaxDocuments": int(df_normalvalues.documents.max()),
+    "MinDocuments": int(df_normalvalues.documents.min()),
     "MeanDocuments":int(round(df_normalvalues.documents.mean(),0)),
     "TotalComponents":len(componentpool)
     }
 
-    #put_component(variance)
-    print(variance)
+    db.addComponent(variance)
 
 """
 df_normalvalues = X
