@@ -7,4 +7,5 @@ data = pd.read_csv("machine.csv")
 db = dbh.database()
 
 #print(db.getComponent(0))
-print(app.MachineAnalyse(data))
+machinedata = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/E1.xlsx")
+print(app.MachineAnalyse(machinedata))

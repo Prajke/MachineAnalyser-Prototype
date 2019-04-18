@@ -10,15 +10,13 @@ import database_helper as dbh
 def MachineAnalyse(machinedata):
     db = dbh.database()
     datapool = pd.read_csv("exData.csv")
-    #listofcomponents = summarize_components(machinedata)
-    listofcomponents = machinedata
+    listofcomponents = summarize_components(machinedata)
+    #listofcomponents = machinedata
     completecomponents = 0
-
     for id in listofcomponents.cid.values:
         #Kollar ifall komponenten finns i referensbibloteket
         componentpool = datapool[datapool.cid == id]
         currcomponent = listofcomponents[listofcomponents.cid == id]
-
         if db.validateComponent(id):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
 
@@ -33,7 +31,6 @@ def MachineAnalyse(machinedata):
             update_variance(componentpool, currcomponent,db)
             if db.validateBounderies(id, currcomponent):
                 completecomponents += 1
-    print(completecomponents)
     return round((completecomponents/len(listofcomponents)),2)
 
 def summarize_components(data):
@@ -54,7 +51,7 @@ def summarize_components(data):
         })
         rows_list.append(row)
     componentdata = pd.DataFrame( rows_list , columns = [ "bomitem", "depth", "leaves", "documents"])
-    componentdata['cid'] = uniquecomponents
+    componentdata['cid'] = uniquecomponents.astype(int)
     return componentdata
 
 def update_variance(componentpool, currcomponent,db):
@@ -77,6 +74,7 @@ def update_variance(componentpool, currcomponent,db):
         df_normalvalues = currcomponent
 
     #Skapa en dikt som skickas in till referensbibloteket, baserat på resultatet från modellen
+
     variance = {
     "cid" : int(currcomponent.cid.values[0]),
     "MaxBOMItem": int(df_normalvalues.bomitem.max()),
