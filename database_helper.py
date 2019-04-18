@@ -55,7 +55,7 @@ class database:
     #Adds a component to the referencelibrary.
     def addComponent(self,data):
         #try:
-            sql = "INSERT INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+            sql = "REPLACE INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
             values = (data['cid'], data['MeanDocuments'],data['MeanBOMItem'],data['MeanLeaves'],data['MaxDocuments'],data['MaxBOMItem'],data['MaxLeaves'],data['MinDocuments'],data['MinBOMItem'],data['MinLeaves'],data['TotalComponents'])
             self.cursor.execute(sql,values)
             self.db.commit()

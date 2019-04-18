@@ -11,6 +11,7 @@ def MachineAnalyse(machinedata):
     db = dbh.database()
     datapool = pd.read_csv("exData.csv")
     listofcomponents = summarize_components(machinedata)
+    datapool.loc[datapool['cid'] == 0, 'cid'] = 1008803013
     #listofcomponents = machinedata
     completecomponents = 0
     for id in listofcomponents.cid.values:
