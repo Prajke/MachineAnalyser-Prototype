@@ -20,10 +20,10 @@ class database:
 ################################################################################
     #Validates if a componet exisits in the referencelibrary. If the component
     #exsists the function returns True, otherwise False.
-    def validateProduct(self, cid):
+    def validateComponent(self, cid):
         try:
-            sql = "SELECT * FROM products WHERE cid = ?"
-            val = (cid,)
+            sql = "SELECT * FROM components WHERE cid = ?"
+            val = (int(cid),)
             self.cursor.execute(sql,val)
             row = self.cursor.fetchone()
             if row == None:
@@ -40,43 +40,43 @@ class database:
     #otherwise false.
     def validateBounderies(self, cid, data):
         try:
-            component = self.getProduct(cid)
-            if ( (data["doc"] >= component["minDoc"] or data["doc"] <= component["maxDoc"]) and
-                 (data["bom"] >= component["minBom"] or data["bom"] <= component["maxBom"]) and
-                 (data["child"] >= component["minChild"] or data["child"] <= component["maxChild"])):
+            component = self.getComponent(cid)
+            if ( (int(data["documents"]) >= component["minDoc"] and int(data["documents"]) <= component["maxDoc"]) and
+                 (int(data["bomitem"]) >= component["minBom"] and int(data["bomitem"]) <= component["maxBom"]) and
+                 (int(data["leaves"]) >= component["minChild"] and int(data["leaves"]) <= component["maxChild"])):
                 return True
             else:
                 return False
         except:
-            return 0
+            raise Exception("Error at validateBounderies")
 
 ################################################################################
 ################################################################################
     #Adds a component to the referencelibrary.
-    def addProduct(self,data):
-        try:
-            sql = "INSERT INTO products(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-            values = (data['cid'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
+    def addComponent(self,data):
+        #try:
+            sql = "INSERT INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+            values = (data['cid'], data['MeanDocuments'],data['MeanBOMItem'],data['MeanLeaves'],data['MaxDocuments'],data['MaxBOMItem'],data['MaxLeaves'],data['MinDocuments'],data['MinBOMItem'],data['MinLeaves'],data['TotalComponents'])
             self.cursor.execute(sql,values)
             self.db.commit()
             return True
-        except:
-            return 0
+        ##except:
+        #    return 0
 
 ################################################################################
 ################################################################################
     #Extracts a component from the referencelibrary. Returns a dictionary
     #containg component bounderies and mean-values for the different features.
-    def getProduct(self, cid):
+    def getComponent(self, cid):
         try:
-            sql = "SELECT * FROM products WHERE cid = ?"
-            val = (cid,)
+            sql = "SELECT * FROM components WHERE cid = ?"
+            val = (int(cid),)
             self.cursor.execute(sql, val)
             row = self.cursor.fetchone()
             if row == None:
-                product = []
-                return product
-            product = {
+                Component = []
+                return Component
+            Component = {
                 "cid":row[0],
                 "meanDoc":row[1],
                 "meanBom": row[2],
@@ -89,16 +89,17 @@ class database:
                 "minChild": row[9],
                 "nrComponents": row[10]
             }
-            return product
+            return Component
         except:
-            return 0
+            raise Exception("Error at GetComponent")
+
 
 ################################################################################
 ################################################################################
     def validateComponentAmount(self,cid,var):
         try:
-            sql = "SELECT * FROM products WHERE cid = ?"
-            val = (cid,)
+            sql = "SELECT nrComponents FROM components WHERE cid = ?"
+            val = (int(cid),)
             self.cursor.execute(sql,val)
             row = self.cursor.fetchone()
             if row[0] < var:

@@ -1,34 +1,34 @@
 import database_helper as dh
 
-def test_validateProduct(db):
-    return db.validateProduct(1)
+def test_validateComponent(db):
+    return db.validateComponent(1)
 
 def test_validateBounderies(db):
     data = {
-    "doc":7,
-    "bom":7,
-    "child":7
+    "totaldocs":7,
+    "BOMitems":7,
+    "nrofchildren":7
     }
     return db.validateBounderies(1,data)
 
-def test_addProduct(db):
-    product = {
-        "cid":1,
-        "meanDoc":3,
-        "meanBom": 3,
-        "meanChild": 3,
-        "maxDoc": 6,
-        "maxBom": 6,
-        "maxChild": 6,
-        "minDoc": 2,
-        "minBom": 2,
-        "minChild": 2,
-        "nrComponents": 12
+def test_addComponent(db):
+    Component = {
+        "cid":3,
+        "MeanDocuments":3,
+        "MeanBOMItem": 3,
+        "MeanLeaves": 3,
+        "MaxDocuments": 6,
+        "MaxBOMItem": 6,
+        "MaxLeaves": 6,
+        "MinDocuments": 2,
+        "MinBOMItem": 2,
+        "MinLeaves": 2,
+        "TotalComponents": 12
     }
-    return db.addProduct(product)
+    return db.addComponent(Component)
 
-def test_getProduct(db):
-    return True#db.getProduct(1)
+def test_getComponent(db):
+    return True#db.getComponent(1)
 
 def test_validateComponentAmount(db):
     return db.validateComponentAmount(1,5)
@@ -36,9 +36,9 @@ def test_validateComponentAmount(db):
 
 def main():
     db = dh.database()
-    print("addProduct():  " + str(test_addProduct(db)))
-    print("\ngetProduct(): " + str(test_getProduct(db)))
-    print("\nvalidateProduct(): " + str(test_validateProduct(db)))
+    print("addComponent():  " + str(test_addComponent(db)))
+    print("\ngetComponent(): " + str(test_getComponent(db)))
+    print("\nvalidateComponent(): " + str(test_validateComponent(db)))
     print("\nvalidateBounderies(): "+ str(test_validateBounderies(db)))
     print("\nvalidateComponentAmount(): "+str(test_validateComponentAmount(db)))
 

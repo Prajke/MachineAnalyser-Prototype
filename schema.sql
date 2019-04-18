@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `products`(
+CREATE TABLE IF NOT EXISTS `components`(
 	`cid`	INT NOT NULL UNIQUE,
   	`meanDoc`	INT NOT NULL,
 	`meanBom`	INT NOT NULL,
