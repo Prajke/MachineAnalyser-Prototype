@@ -9,17 +9,18 @@ import database_helper as dbh
 import time
 
 
+
 def MachineAnalyse(machinedata):
     db = dbh.database()
     datapool = pd.read_csv("exData.csv")
     start_summarize = time.time()
     listofcomponents = summarize_components(machinedata)
     time_summarize = time.time() - start_summarize
-    datapool.loc[datapool['cid'] == 0, 'cid'] = 1008803013
-    datapool.loc[datapool['cid'] == 1, 'cid'] = 1008803050
-    datapool.loc[datapool['cid'] == 2, 'cid'] = 1008802058
-    datapool.loc[datapool['cid'] == 3, 'cid'] = 1008802060
-    datapool.loc[datapool['cid'] == 4, 'cid'] = 1008802061
+
+    for i in range(0,2056):
+        datapool.loc[datapool['cid'] == i, 'cid'] = listofcomponents.cid.values[i]
+
+
 
     #listofcomponents = machinedata
     completecomponents = 0
@@ -27,7 +28,7 @@ def MachineAnalyse(machinedata):
     start_comploop = time.time()
     for id in listofcomponents.cid.values:
         #Kollar ifall komponenten finns i referensbibloteket
-        componentpool = datapool[datapool.cid == id]
+        componentpool = datapool[datapool.cid == int(id)]
         currcomponent = listofcomponents[listofcomponents.cid == id]
         if db.validateComponent(id):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
@@ -50,7 +51,7 @@ def MachineAnalyse(machinedata):
     print("Comploop time: " + str(time_comploop-time_model))
     print("Summarize time: " + str(time_summarize))
     print("Model time: " + str(time_model))
-    return round((completecomponents/len(listofcomponents)),2)
+    return round((completecomponents/len(listofcomponents)),4)
 
 def summarize_components(data):
     machinedata = data.iloc[4:]
@@ -77,18 +78,19 @@ def update_variance(componentpool, currcomponent,db):
     #Extraherar liknande komponenter från datapoolen
     #componentpool = componentpool.append(pd.DataFrame(currcomponent, columns =[ 'cid','bomitem','leaves', 'documents']))
 
-
+    #time_model = 0
     if len(componentpool) > 1:
-        #X = componentpool.loc[0:,['bomitem','leaves', 'documents']]
+
+        X = componentpool.loc[0:,['bomitem','leaves', 'documents']]
         #Local Outlier Factor
-        model = LocalOutlierFactor(n_neighbors=20)
+        model =  LocalOutlierFactor(n_neighbors=20)
+        #LocalOutlierFactor(n_neighbors=20)
         #IsolationForest(n_estimators=100, max_samples='auto')
         #DBSCAN(eps=3, metric='euclidean', min_samples=3)
-        #model.fit(X)
-        lof_result = model.fit_predict(componentpool)
-        df_anomalyvalues = componentpool[lof_result == -1]
-        df_normalvalues = componentpool[lof_result != -1]
-
+        model.fit(X)
+        lof_result = model.fit_predict(X)
+        df_anomalyvalues = X[lof_result == -1]
+        df_normalvalues = X[lof_result != -1]
     else :
         df_normalvalues = currcomponent
 
@@ -107,8 +109,10 @@ def update_variance(componentpool, currcomponent,db):
     "MeanDocuments":int(round(df_normalvalues.documents.mean(),0)),
     "TotalComponents":len(componentpool)
     }
-
+    #start_model = time.time()
     db.addComponent(variance)
+    #time_model = ( time.time() - start_model)
+    #return time_model
 
 """
 df_normalvalues = X
