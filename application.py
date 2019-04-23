@@ -8,7 +8,8 @@ from sklearn.ensemble import IsolationForest
 import database_helper as dbh
 import time
 
-
+##Minska funktions calling i comploop
+#Minska databasåtkomst i comploop => en get component
 
 def MachineAnalyse(machinedata):
     db = dbh.database()
@@ -17,35 +18,42 @@ def MachineAnalyse(machinedata):
     listofcomponents = summarize_components(machinedata)
     time_summarize = time.time() - start_summarize
 
-    for i in range(0,2056):
+    for i in range(0,2058):
         datapool.loc[datapool['cid'] == i, 'cid'] = listofcomponents.cid.values[i]
-
-
 
     #listofcomponents = machinedata
     completecomponents = 0
     time_model = 0
     start_comploop = time.time()
-    for id in listofcomponents.cid.values:
+    #for id in listofcomponents.cid.values:
+    for index,row in listofcomponents.iterrows():
         #Kollar ifall komponenten finns i referensbibloteket
-        componentpool = datapool[datapool.cid == int(id)]
-        currcomponent = listofcomponents[listofcomponents.cid == id]
-        if db.validateComponent(id):
+
+        componentpool = datapool[datapool.cid == int(row['cid'])]
+        currcomponent = listofcomponents[listofcomponents.cid ==row['cid']]
+
+        #oldcomponent = db.getComponent(int(row['cid']))
+
+        #if oldcomponent != []:
+        if db.validateComponent(row['cid']):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
 
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
-            if  db.validateComponentAmount(id,len(componentpool)) :
+            #if int(oldcomponent["nrComponents"]) > len(componentpool):
+            if  db.validateComponentAmount(row['cid'],len(componentpool)) :
                 start_model = time.time()
-                update_variance(componentpool, currcomponent,db)
+                oldcomponent = update_variance(componentpool, currcomponent,db)
                 time_model += ( time.time() - start_model)
-            if db.validateBounderies(id, currcomponent):
+            if db.validateBounderies(row['cid'], currcomponent):
+            #if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
         else:
             start_model = time.time()
-            update_variance(componentpool, currcomponent,db)
+            oldcomponent = update_variance(componentpool, currcomponent,db)
             time_model += (time.time() - start_model)
-            if db.validateBounderies(id, currcomponent):
+            if db.validateBounderies(row['cid'], currcomponent):
+            #if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
     time_comploop = time.time() - start_comploop
     print("Comploop time: " + str(time_comploop-time_model))
@@ -98,22 +106,30 @@ def update_variance(componentpool, currcomponent,db):
 
     variance = {
     "cid" : int(currcomponent.cid.values[0]),
-    "MaxBOMItem": int(df_normalvalues.bomitem.max()),
-    "MinBOMItem":int(df_normalvalues.bomitem.min()),
-    "MeanBOMItem":int(round(df_normalvalues.bomitem.mean(),0)),
-    "MaxLeaves": int(df_normalvalues.leaves.max()),
-    "MinLeaves":int(df_normalvalues.leaves.min()),
-    "MeanLeaves":int(round(df_normalvalues.leaves.mean(),0)),
-    "MaxDocuments": int(df_normalvalues.documents.max()),
-    "MinDocuments": int(df_normalvalues.documents.min()),
-    "MeanDocuments":int(round(df_normalvalues.documents.mean(),0)),
-    "TotalComponents":len(componentpool)
+    "maxBom": int(df_normalvalues.bomitem.max()),
+    "minBom":int(df_normalvalues.bomitem.min()),
+    "meanBom":int(round(df_normalvalues.bomitem.mean(),0)),
+    "maxChild": int(df_normalvalues.leaves.max()),
+    "minChild":int(df_normalvalues.leaves.min()),
+    "meanChild":int(round(df_normalvalues.leaves.mean(),0)),
+    "maxDoc": int(df_normalvalues.documents.max()),
+    "minDoc": int(df_normalvalues.documents.min()),
+    "meanDoc":int(round(df_normalvalues.documents.mean(),0)),
+    "nrComponents":len(componentpool)
     }
     #start_model = time.time()
     db.addComponent(variance)
+
+    return variance
     #time_model = ( time.time() - start_model)
     #return time_model
-
+def validateBounderies(curr, old):
+    if ( (int(curr["documents"]) >= old["minDoc"] and int(curr["documents"]) <= old["maxDoc"]) and
+         (int(curr["bomitem"]) >= old["minBom"] and int(curr["bomitem"]) <= old["maxBom"]) and
+         (int(curr["leaves"]) >= old["minChild"]  and int(curr["leaves"]) <= old["maxChild"])):
+        return True
+    else:
+        return False
 """
 df_normalvalues = X
 df_normalvalues['Anomaly'] = lof_result

@@ -41,9 +41,11 @@ class database:
     def validateBounderies(self, cid, data):
         try:
             component = self.getComponent(cid)
+
             if ( (int(data["documents"]) >= component["minDoc"] and int(data["documents"]) <= component["maxDoc"]) and
                  (int(data["bomitem"]) >= component["minBom"] and int(data["bomitem"]) <= component["maxBom"]) and
                  (int(data["leaves"]) >= component["minChild"] and int(data["leaves"]) <= component["maxChild"])):
+
                 return True
             else:
                 return False
@@ -56,7 +58,7 @@ class database:
     def addComponent(self,data):
         #try:
             sql = "REPLACE INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-            values = (data['cid'], data['MeanDocuments'],data['MeanBOMItem'],data['MeanLeaves'],data['MaxDocuments'],data['MaxBOMItem'],data['MaxLeaves'],data['MinDocuments'],data['MinBOMItem'],data['MinLeaves'],data['TotalComponents'])
+            values = (data['cid'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
             self.cursor.execute(sql,values)
             self.db.commit()
             return True
@@ -151,3 +153,13 @@ class database:
             return True
         except:
             return 0
+
+    def insertcsv(self, dict):
+        sql = "REPLACE INTO test VALUES(?,?,?,?) "
+        self.cursor.executemany(sql, dict)
+        self.db.commit()
+
+        #FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS
+
+# Fill the table
+#con.executemany("insert into person(firstname, lastname) values (?, ?)", persons)
