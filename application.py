@@ -14,51 +14,58 @@ import time
 def MachineAnalyse(machinedata):
     db = dbh.database()
     datapool = pd.read_csv("exData.csv")
-    start_summarize = time.time()
+    #start_summarize = time.time()
     listofcomponents = summarize_components(machinedata)
-    time_summarize = time.time() - start_summarize
+    #time_summarize = time.time() - start_summarize
 
     for i in range(0,2058):
         datapool.loc[datapool['cid'] == i, 'cid'] = listofcomponents.cid.values[i]
 
-    #listofcomponents = machinedata
     completecomponents = 0
-    time_model = 0
-    start_comploop = time.time()
+    rows_list = []
+
+    #time_model = 0
+    #start_comploop = time.time()
+
     #for id in listofcomponents.cid.values:
     for index,row in listofcomponents.iterrows():
         #Kollar ifall komponenten finns i referensbibloteket
-
-        componentpool = datapool[datapool.cid == int(row['cid'])]
+        componentpool = datapool[datapool.cid == row['cid']]
         currcomponent = listofcomponents[listofcomponents.cid ==row['cid']]
+        oldcomponent = db.getComponent(int(row['cid']))
 
-        #oldcomponent = db.getComponent(int(row['cid']))
-
-        #if oldcomponent != []:
-        if db.validateComponent(row['cid']):
+        if oldcomponent != []:
+        #if db.validateComponent(row['cid']):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
 
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
-            #if int(oldcomponent["nrComponents"]) > len(componentpool):
-            if  db.validateComponentAmount(row['cid'],len(componentpool)) :
-                start_model = time.time()
+            if int(oldcomponent["nrComponents"]) > len(componentpool):
+            #if  db.validateComponentAmount(row['cid'],len(componentpool)) :
+                #start_model = time.time()
                 oldcomponent = update_variance(componentpool, currcomponent,db)
-                time_model += ( time.time() - start_model)
-            if db.validateBounderies(row['cid'], currcomponent):
-            #if validateBounderies(currcomponent,oldcomponent):
+                rows_list.append(oldcomponent)
+                #time_model += ( time.time() - start_model)
+            #if db.validateBounderies(row['cid'], currcomponent):
+            if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
         else:
-            start_model = time.time()
+            #start_model = time.time()
             oldcomponent = update_variance(componentpool, currcomponent,db)
-            time_model += (time.time() - start_model)
-            if db.validateBounderies(row['cid'], currcomponent):
-            #if validateBounderies(currcomponent,oldcomponent):
+            rows_list.append(oldcomponent)
+            #time_model += (time.time() - start_model)
+            #if db.validateBounderies(row['cid'], currcomponent):
+            if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
-    time_comploop = time.time() - start_comploop
-    print("Comploop time: " + str(time_comploop-time_model))
-    print("Summarize time: " + str(time_summarize))
-    print("Model time: " + str(time_model))
+
+
+    referencedata = pd.DataFrame( rows_list , columns = [ "cid", "meanDoc","meanBom","meanChild","maxDoc","maxBom","maxChild","minDoc","minBom","minChild","nrComponents"])
+    listofreferences = referencedata.values.tolist()
+    db.insertList(listofreferences)
+    #time_comploop = time.time() - start_comploop
+    #print("Comploop time: " + str(time_comploop-time_model))
+    #print("Summarize time: " + str(time_summarize))
+    #print("Model time: " + str(time_model))
     return round((completecomponents/len(listofcomponents)),4)
 
 def summarize_components(data):
@@ -103,8 +110,8 @@ def update_variance(componentpool, currcomponent,db):
         df_normalvalues = currcomponent
 
     #Skapa en dikt som skickas in till referensbibloteket, baserat på resultatet från modellen
-
-    variance = {
+    variance ={}
+    variance.update( {
     "cid" : int(currcomponent.cid.values[0]),
     "maxBom": int(df_normalvalues.bomitem.max()),
     "minBom":int(df_normalvalues.bomitem.min()),
@@ -116,9 +123,9 @@ def update_variance(componentpool, currcomponent,db):
     "minDoc": int(df_normalvalues.documents.min()),
     "meanDoc":int(round(df_normalvalues.documents.mean(),0)),
     "nrComponents":len(componentpool)
-    }
+    })
     #start_model = time.time()
-    db.addComponent(variance)
+#    db.addComponent(variance)
 
     return variance
     #time_model = ( time.time() - start_model)

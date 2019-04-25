@@ -154,12 +154,7 @@ class database:
         except:
             return 0
 
-    def insertcsv(self, dict):
-        sql = "REPLACE INTO test VALUES(?,?,?,?) "
-        self.cursor.executemany(sql, dict)
+    def insertList(self, list):
+        sql = "REPLACE INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+        self.cursor.executemany(sql, list)
         self.db.commit()
-
-        #FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS
-
-# Fill the table
-#con.executemany("insert into person(firstname, lastname) values (?, ?)", persons)
