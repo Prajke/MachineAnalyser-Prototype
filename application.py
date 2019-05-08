@@ -18,7 +18,8 @@ def MachineAnalyse(machinedata):
     listofcomponents = summarize_components(machinedata)
     #time_summarize = time.time() - start_summarize
 
-    for i in range(0,2058):
+    #for i in range(0,2058):
+    for i in range(0,313):
         datapool.loc[datapool['cid'] == i, 'cid'] = listofcomponents.cid.values[i]
 
     completecomponents = 0
@@ -31,8 +32,8 @@ def MachineAnalyse(machinedata):
     for index,row in listofcomponents.iterrows():
         #Kollar ifall komponenten finns i referensbibloteket
         componentpool = datapool[datapool.cid == row['cid']]
-        currcomponent = listofcomponents[listofcomponents.cid ==row['cid']]
-        oldcomponent = db.getComponent(int(row['cid']))
+        currcomponent = listofcomponents[listofcomponents.eqnr ==row['eqnr']]
+        oldcomponent = db.getComponent(row['cid'])
 
         if oldcomponent != []:
         #if db.validateComponent(row['cid']):
@@ -40,10 +41,13 @@ def MachineAnalyse(machinedata):
 
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
-            if int(oldcomponent["nrComponents"]) > len(componentpool):
+            if int(oldcomponent["nrComponents"]) < len(componentpool):
             #if  db.validateComponentAmount(row['cid'],len(componentpool)) :
                 #start_model = time.time()
                 oldcomponent = update_variance(componentpool, currcomponent,db)
+                #is old component comid in list
+                    #if validateBounderies(oldcomponent, listcomponent)
+                        #replace Compid values
                 rows_list.append(oldcomponent)
                 #time_model += ( time.time() - start_model)
             #if db.validateBounderies(row['cid'], currcomponent):
@@ -52,6 +56,7 @@ def MachineAnalyse(machinedata):
         else:
             #start_model = time.time()
             oldcomponent = update_variance(componentpool, currcomponent,db)
+
             rows_list.append(oldcomponent)
             #time_model += (time.time() - start_model)
             #if db.validateBounderies(row['cid'], currcomponent):
@@ -72,21 +77,22 @@ def summarize_components(data):
     machinedata = data.iloc[4:]
     cleanup_nums = {"BOM Item": {"-": 0, "Text": 1, "Document": 2, "Material": 4}}
     machinedata.replace(cleanup_nums, inplace=True)
-    uniquecomponents = machinedata["Equipment No"].unique()
+    uniqueeqnr = machinedata["Equipment No"].unique()
     rows_list = []
 
-    for id in uniquecomponents:
+    for id in uniqueeqnr:
         row = {}
         row.update( {
         "leaves": len(machinedata[machinedata.Parent == id]),
         "documents": machinedata[machinedata["Equipment No"] == id]["No of Docs"].sum(),
         #"totaldocsofchildren": machinedata[machinedata.Parent == id]["No of Docs"].sum(),
         "depth": machinedata[machinedata["Equipment No"] == id].Depth.median(),
-        "bomitem": machinedata[machinedata["Equipment No"] == id]["BOM Item"].sum()
+        "bomitem": machinedata[machinedata["Equipment No"] == id]["BOM Item"].sum(),
+        "cid": machinedata[machinedata["Equipment No"] == id]["Material No."].unique()[0]
         })
         rows_list.append(row)
-    componentdata = pd.DataFrame( rows_list , columns = [ "bomitem", "depth", "leaves", "documents"])
-    componentdata['cid'] = uniquecomponents.astype(int)
+    componentdata = pd.DataFrame( rows_list , columns = [ "cid", "bomitem", "depth", "leaves", "documents"])
+    componentdata['eqnr'] = uniqueeqnr.astype(int)
     return componentdata
 
 def update_variance(componentpool, currcomponent,db):
@@ -112,7 +118,7 @@ def update_variance(componentpool, currcomponent,db):
     #Skapa en dikt som skickas in till referensbibloteket, baserat på resultatet från modellen
     variance ={}
     variance.update( {
-    "cid" : int(currcomponent.cid.values[0]),
+    "cid" : currcomponent.cid.values[0],
     "maxBom": int(df_normalvalues.bomitem.max()),
     "minBom":int(df_normalvalues.bomitem.min()),
     "meanBom":int(round(df_normalvalues.bomitem.mean(),0)),

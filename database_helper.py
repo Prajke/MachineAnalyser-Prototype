@@ -72,7 +72,7 @@ class database:
     def getComponent(self, cid):
         try:
             sql = "SELECT * FROM components WHERE cid = ?"
-            val = (int(cid),)
+            val = (cid,)
             self.cursor.execute(sql, val)
             row = self.cursor.fetchone()
             if row == None:
