@@ -18,25 +18,24 @@ db = dbh.database()
 #    db.insert(item)
 #elapsed = time.time() - start
 #print("Total time: " +  str(elapsed))
+#print(app.summarize_components(machinedata).head(10))
+#start= time.time()
+#print("Machine completness : " + str(app.MachineAnalyse(machinedata)))
+
+#elapsed = time.time() - start
+#print("Total time: " +  str(elapsed))
+
+
 def wrapper(func, *args, **kwargs):
     def wrapped():
         return func(*args, **kwargs)
     return wrapped
 
-machinedata = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/E1.xlsx")
-#print(app.summarize_components(machinedata))
-#start= time.time()
-#print("Machine completness : " + str(app.MachineAnalyse(machinedata)))
+#datapool = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/rawdatapool.xlsx")
+#datapool = app.summarize_components(datapool)
+#datapool.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/datapool.xlsx")
+
+machinedata = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/E1_v2.xlsx")
 wrapped =wrapper(app.MachineAnalyse, machinedata)
 py=timeit.timeit(wrapped, number = 1)
-#elapsed = time.time() - start
-#print("Total time: " +  str(elapsed))
 print("Time: " +str(py))
-
-
-#LOAD DATA INFILE 'data.txt' INTO TABLE db2.my_table;
-#FIELDS TERMINATED BY ','
-#ENCLOSED BY '"'
-#LINES TERMINATED BY '\r\n'
-#IGNORE 1 LINES
-#(col1, col2, col3, col4, col5...);

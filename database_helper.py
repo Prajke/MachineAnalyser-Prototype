@@ -80,15 +80,15 @@ class database:
                 return Component
             Component = {
                 "cid":row[0],
-                "meanDoc":row[1],
-                "meanBom": row[2],
-                "meanChild": row[3],
-                "maxDoc": row[4],
-                "maxBom": row[5],
-                "maxChild": row[6],
-                "minDoc": row[7],
-                "minBom": row[8],
-                "minChild": row[9],
+                "maxBom":row[1],
+                "minBom": row[2],
+                "meanBom": row[3],
+                "maxChild": row[4],
+                "minChild": row[5],
+                "meanChild": row[6],
+                "maxDoc": row[7],
+                "minDoc": row[8],
+                "meanDoc": row[9],
                 "nrComponents": row[10]
             }
             return Component
@@ -155,6 +155,6 @@ class database:
             return 0
 
     def insertList(self, list):
-        sql = "REPLACE INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+        sql = "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?) "
         self.cursor.executemany(sql, list)
         self.db.commit()
