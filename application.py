@@ -58,7 +58,6 @@ def MachineAnalyse(machinedata):
             if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
 
-    
     referencedata = pd.DataFrame( rows_list , columns = [ "cid", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild","maxDoc","minDoc","meanDoc","nrComponents"])
     listofreferences = referencedata.values.tolist()
     db.insertList(listofreferences)
