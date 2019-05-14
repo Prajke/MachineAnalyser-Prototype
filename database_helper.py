@@ -44,7 +44,7 @@ class database:
 
             if ( (int(data["documents"]) >= component["minDoc"] and int(data["documents"]) <= component["maxDoc"]) and
                  (int(data["bomitem"]) >= component["minBom"] and int(data["bomitem"]) <= component["maxBom"]) and
-                 (int(data["leaves"]) >= component["minChild"] and int(data["leaves"]) <= component["maxChild"])):
+                 (int(data["children"]) >= component["minChild"] and int(data["children"]) <= component["maxChild"])):
 
                 return True
             else:
