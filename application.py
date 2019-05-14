@@ -13,7 +13,7 @@ import time
 
 def MachineAnalyse(machinedata):
     db = dbh.database()
-    datapool = pd.read_csv("exData.csv")
+    #datapool = pd.read_csv("exData.csv")
     #start_summarize = time.time()
     listofcomponents = summarize_components(machinedata)
     #time_summarize = time.time() - start_summarize
@@ -93,7 +93,7 @@ def summarize_components(data):
         row.update( {
         "leaves": len(machinedata[machinedata.Parent == id]),
         "documents": machinedata[machinedata["Equipment No"] == id]["No of Docs"].sum(),
-        #"totaldocsofchildren": machinedata[machinedata.Parent == id]["No of Docs"].sum(),
+        "totaldocs": machinedata[(machinedata["Equipment No"] == component) & (machinedata["BOM Item"] == 2) ]["No of Docs"].sum(),
         "depth": machinedata[machinedata["Equipment No"] == id].Depth.median(),
         "bomitem": machinedata[machinedata["Equipment No"] == id]["BOM Item"].sum(),
         "cid": machinedata[machinedata["Equipment No"] == id]["Material No."].unique()[0]
