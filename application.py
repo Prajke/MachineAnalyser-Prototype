@@ -81,7 +81,7 @@ def summarize_components(data):
     for id in uniqueeqnr:
         row = {}
         row.update( {
-        "leaves": len(machinedata[machinedata.Parent == id]),
+        "children": len(machinedata[machinedata["Parent"] == component]["Equipment No"].unique()),
         "documents": machinedata[machinedata["Equipment No"] == id]["No of Docs"].sum(),
         "totaldocs": machinedata[(machinedata["Equipment No"] == component) & (machinedata["BOM Item"] == 2) ]["No of Docs"].sum(),
         "depth": machinedata[machinedata["Equipment No"] == id].Depth.median(),
@@ -89,17 +89,17 @@ def summarize_components(data):
         "cid": machinedata[machinedata["Equipment No"] == id]["Material No."].unique()[0]
         })
         rows_list.append(row)
-    componentdata = pd.DataFrame( rows_list , columns = [ "cid", "bomitem", "depth", "leaves", "documents"])
+    componentdata = pd.DataFrame( rows_list , columns = [ "cid", "bomitem", "depth", "children", "documents"])
     componentdata['eqnr'] = uniqueeqnr.astype(int)
     return componentdata
 
 def update_variance(componentpool, currcomponent,db):
     #Extraherar liknande komponenter från datapoolen
-    #componentpool = componentpool.append(pd.DataFrame(currcomponent, columns =[ 'cid','bomitem','leaves', 'documents']))
+    #componentpool = componentpool.append(pd.DataFrame(currcomponent, columns =[ 'cid','bomitem','children', 'documents']))
     #time_model = 0
     if len(componentpool) > 3:
 
-        X = componentpool.loc[0:,['bomitem','leaves', 'documents']]
+        X = componentpool.loc[0:,['bomitem','children', 'documents']]
         #Local Outlier Factor
         model = DBSCAN(eps=0.4, metric='euclidean', min_samples=2)
         #LocalOutlierFactor(n_neighbors=20)
@@ -124,9 +124,9 @@ def update_variance(componentpool, currcomponent,db):
     "maxBom": int(df_normalvalues.bomitem.max()),
     "minBom":int(df_normalvalues.bomitem.min()),
     "meanBom":int(round(df_normalvalues.bomitem.mean(),0)),
-    "maxChild": int(df_normalvalues.leaves.max()),
-    "minChild":int(df_normalvalues.leaves.min()),
-    "meanChild":int(round(df_normalvalues.leaves.mean(),0)),
+    "maxChild": int(df_normalvalues.children.max()),
+    "minChild":int(df_normalvalues.children.min()),
+    "meanChild":int(round(df_normalvalues.children.mean(),0)),
     "maxDoc": int(df_normalvalues.documents.max()),
     "minDoc": int(df_normalvalues.documents.min()),
     "meanDoc":int(round(df_normalvalues.documents.mean(),0)),
@@ -139,7 +139,7 @@ def update_variance(componentpool, currcomponent,db):
 def validateBounderies(curr, old):
     if ( (int(curr["documents"]) >= old["minDoc"] and int(curr["documents"]) <= old["maxDoc"]) and
          (int(curr["bomitem"]) >= old["minBom"] and int(curr["bomitem"]) <= old["maxBom"]) and
-         (int(curr["leaves"]) >= old["minChild"]  and int(curr["leaves"]) <= old["maxChild"])):
+         (int(curr["children"]) >= old["minChild"]  and int(curr["children"]) <= old["maxChild"])):
         return True
     else:
         return False
@@ -150,7 +150,7 @@ df_anomalyvalues = df_normalvalues[df_normalvalues.Anomaly == -1]
 df_normalvalues = df_normalvalues[df_normalvalues.Anomaly != -1]
 #print(df_normalvalues.head(10))
 #df_normalvalues.thalach.max()
-#component.plot.scatter('leaves', 'documents', c= lof_result, colormap = 'jet', colorbar = False)
+#component.plot.scatter('children', 'documents', c= lof_result, colormap = 'jet', colorbar = False)
 #plt.show()
 #uniquecompid = data.compid.unique()
 #print(uniquecompid)
