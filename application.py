@@ -58,6 +58,16 @@ def MachineAnalyse(machinedata):
             if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
 
+        #Find children to the node
+        listofchildren = componentdata[componentdata.parent == row['eqnr']]
+        #Loopar, kollar, och insertar.
+        #Returnar en dataframe med eqnr,komplett, parent
+        df = AnalyseComps()
+
+        #Check if each children is complete,with machine analyse function?
+        #Store value for the children in dataframe
+        #Retrieve the overall completeness for children and summarize completness for the node
+        #Dataframe med: nodnr, nodekomplett, childrenkompletthet för varje node och child
     referencedata = pd.DataFrame( rows_list , columns = [ "cid", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild","maxDoc","minDoc","meanDoc","nrComponents"])
     listofreferences = referencedata.values.tolist()
     db.insertList(listofreferences)
