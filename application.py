@@ -15,7 +15,7 @@ def MachineAnalyse(machinedata):
     db = dbh.database()
     #datapool = pd.read_csv("exData.csv")
     #start_summarize = time.time()
-    listofcomponents = summarize_components(machinedata)
+    listofcomponents = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_components(machinedata)
     #time_summarize = time.time() - start_summarize
 
     #for i in range(0,2058):
@@ -25,7 +25,7 @@ def MachineAnalyse(machinedata):
 
     completecomponents = 0
     rows_list = []
-
+    complete_list = []
     #time_model = 0
     #start_comploop = time.time()
 
@@ -48,6 +48,9 @@ def MachineAnalyse(machinedata):
 
             if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
+                complete_list.append(1)
+            else:
+                complete_list.append(0)
         else:
             #start_model = time.time()
             oldcomponent = update_variance(componentpool, currcomponent,db)
@@ -57,15 +60,32 @@ def MachineAnalyse(machinedata):
 
             if validateBounderies(currcomponent,oldcomponent):
                 completecomponents += 1
+                complete_list.append(1)
+            else:
+                complete_list.append(0)
 
-    for component in listofcomponents:
-        df_parent = AnalyseComps(parents)
+    referencedata = pd.DataFrame( rows_list , columns = [ "cid", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild","maxDoc","minDoc","meanDoc","nrComponents"])
+    listofreferences = referencedata.values.tolist()
+    db.insertList(listofreferences)
+
+    completedata = pd.DataFrame( complete_list , columns = ["complete"])
+    completedata['eqnr'] = listofcomponents.eqnr.values
+    completedata['cid'] = listofcomponents.cid.values
+    completedata['depth'] = listofcomponents.depth.values
+    completedata.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/completedata.xlsx")
+
+    
+    print (round((completecomponents/len(listofcomponents)),4))
+
+
+    #for component in listofcomponents:
+    #    df_parent = AnalyseComps(parents)
         #Find children to the node
-        listofchildren = componentdata[componentdata.parent == row['eqnr'] & componentdata.children != 0 ]
+    #    listofchildren = componentdata[componentdata.parent == row['eqnr'] & componentdata.children != 0 ]
         #Loopar, kollar, och insertar.
         #Returnar en dataframe med eqnr,komplett, parent
-        for child in listofchildren
-            df_children = AnalyseComps(children)
+    #    for child in listofchildren
+    #        df_children = AnalyseComps(children)
 
 
 
@@ -74,10 +94,6 @@ def MachineAnalyse(machinedata):
     #Retrieve the overall completeness for children and summarize completness for the node
     #Dataframe med: nodnr, nodekomplett, childrenkompletthet för varje node och child
 
-    referencedata = pd.DataFrame( rows_list , columns = [ "cid", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild","maxDoc","minDoc","meanDoc","nrComponents"])
-    listofreferences = referencedata.values.tolist()
-    db.insertList(listofreferences)
-    print (round((completecomponents/len(listofcomponents)),4))
 
     #time_comploop = time.time() - start_comploop
     #print("Comploop time: " + str(time_comploop-time_model))
@@ -97,9 +113,9 @@ def summarize_components(data):
     for id in uniqueeqnr:
         row = {}
         row.update( {
-        "children": len(machinedata[machinedata["Parent"] == component]["Equipment No"].unique()),
+        "children": len(machinedata[machinedata["Parent"] == id]["Equipment No"].unique()),
         "documents": machinedata[machinedata["Equipment No"] == id]["No of Docs"].sum(),
-        "totaldocs": machinedata[(machinedata["Equipment No"] == component) & (machinedata["BOM Item"] == 2) ]["No of Docs"].sum(),
+        "totaldocs": machinedata[(machinedata["Equipment No"] == id) & (machinedata["BOM Item"] == 2) ]["No of Docs"].sum(),
         "depth": machinedata[machinedata["Equipment No"] == id].Depth.median(),
         "bomitem": machinedata[machinedata["Equipment No"] == id]["BOM Item"].sum(),
         "cid": machinedata[machinedata["Equipment No"] == id]["Material No."].unique()[0]
@@ -107,6 +123,8 @@ def summarize_components(data):
         rows_list.append(row)
     componentdata = pd.DataFrame( rows_list , columns = [ "cid", "bomitem", "depth", "children", "documents"])
     componentdata['eqnr'] = uniqueeqnr.astype(int)
+    #print(uniqueeqnr)
+    #componentdata.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx")
     return componentdata
 
 def update_variance(componentpool, currcomponent,db):
@@ -153,6 +171,8 @@ def update_variance(componentpool, currcomponent,db):
     #time_model = ( time.time() - start_model)
     #return time_model
 def validateBounderies(curr, old):
+    #print(curr)
+    #print(old)
     if ( (int(curr["documents"]) >= old["minDoc"] and int(curr["documents"]) <= old["maxDoc"]) and
          (int(curr["bomitem"]) >= old["minBom"] and int(curr["bomitem"]) <= old["maxBom"]) and
          (int(curr["children"]) >= old["minChild"]  and int(curr["children"]) <= old["maxChild"])):
