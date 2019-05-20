@@ -3,7 +3,7 @@
 #                                                                         #
 #                                                                         #
 ############################################################################
-import sqlite3, json
+import sqlite3, json, datetime
 
 class database:
 ################################################################################
@@ -89,7 +89,8 @@ class database:
                 "maxDoc": row[7],
                 "minDoc": row[8],
                 "meanDoc": row[9],
-                "nrComponents": row[10]
+                "nrComponents": row[10],
+                "date": row[11]
             }
             return Component
         except:
@@ -155,6 +156,6 @@ class database:
             return 0
 
     def insertList(self, list):
-        sql = "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+        sql =  "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
         self.cursor.executemany(sql, list)
         self.db.commit()

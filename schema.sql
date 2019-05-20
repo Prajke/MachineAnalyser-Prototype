@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS `components`(
 	`minDoc`	INT NOT NULL,
 	`minBom`	INT NOT NULL,
 	`minChild`	INT NOT NULL,
-	`nrComponents` INT NOT NULL
+	`nrComponents` INT NOT NULL,
+	`dateTime` DATETIME NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `anomalies`(
