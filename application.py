@@ -15,7 +15,7 @@ def MachineAnalyse(machinedata):
     db = dbh.database()
     #datapool = pd.read_csv("exData.csv")
     #start_summarize = time.time()
-    listofcomponents = summarize_components(machinedata) #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_components(machinedata)
+    listofcomponents = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_components(machinedata)
     #time_summarize = time.time() - start_summarize
 
     #for i in range(0,2058):
@@ -85,12 +85,16 @@ def MachineAnalyse(machinedata):
             completecomponents = 0
             completecomponents += row['qm']
             totalnodes = row['children'] + 1
+            if row['eqnr'] == 1008803013:
+                print(completecomponents)
+                print(totalnodes)
             children = componentdata[componentdata['parent'] == row['eqnr']]
             dict = calc_child(children, componentdata,completecomponents, totalnodes)
-            completecomponents += dict['total_qm']
-            totalnodes += dict['totalchildren']
-            print(completecomponents)
-            print(totalnodes)
+            completecomponents = dict['total_qm']
+            totalnodes = dict['totalchildren']
+            if row['eqnr'] == 1008803013:
+                print(completecomponents)
+                print(totalnodes)
             complete_list.append(round((completecomponents/totalnodes),4))
 
     #print (round((completecomponents/len(listofcomponents)),4))
@@ -110,8 +114,11 @@ def calc_child(children, df, completecomponents, totalnodes ):
         if row['children'] != 0:
             totalnodes += row['children']
             dict = calc_child(df[df['parent'] == row['eqnr']], df, completecomponents, totalnodes)
-            totalnodes += dict['totalchildren']
-            completecomponents += dict['total_qm']
+            totalnodes = dict['totalchildren']
+            completecomponents = dict['total_qm']
+        if row['parent'] == 1008803013:
+            print(completecomponents)
+            print(totalnodes)
     dict =	{
       "total_qm": completecomponents,
       "totalchildren": totalnodes
