@@ -89,8 +89,11 @@ class database:
                 "maxDoc": row[7],
                 "minDoc": row[8],
                 "meanDoc": row[9],
-                "nrComponents": row[10],
-                "date": row[11]
+                "maxMat": row[10],
+                "minMat": row[11],
+                "meanMat": row[12],
+                "nrComponents": row[13],
+                "date": row[14]
             }
             return Component
         except:
@@ -118,14 +121,10 @@ class database:
 
 ################################################################################
 ################################################################################
-    def insertAnonmaly(self, cid):
-        try:
-            sql = "INSERT INTO anomalies(cid) VALUES(?)"
-            values = (cid)
-            self.cursor.execute(sql,values)
-            return True
-        except:
-            return 0
+    def insertAnomalies(self, list):
+        sql = "INSERT INTO anomalies(cid, bomitem, children, documents, materials, date) VALUES(?,?,?,?,?,?)"
+        self.cursor.executemany(sql, list)
+        self.db.commit()
 ################################################################################
 ################################################################################
     def getAnomalies(self, cid=None):
@@ -156,6 +155,6 @@ class database:
             return 0
 
     def insertList(self, list):
-        sql =  "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+        sql =  "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,maxMat,minMat,meanMat,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
         self.cursor.executemany(sql, list)
         self.db.commit()
