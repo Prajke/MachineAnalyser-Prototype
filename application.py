@@ -27,15 +27,19 @@ def MachineAnalyse(machinedata):
             #Extraherar referensvärdena och jämföra dessa med värden i komponenten i maskinen
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
-            if (int(old_reference['nrComponents']) < len(componentpool)) or not (validate_date(old_reference['date'])):
-                old_reference = update_variance(componentpool, current_reference,db)
+            if (int(old_reference['nrComponents']) < len(componentpool)) or not(validate_date(old_reference['date']) or not(in_list(row['cid'], reference_list)) ):
+                old_reference = update_variance(componentpool, current_reference)
                 reference_list.append(old_reference)
             qm_dict = validateBounderies(current_reference,old_reference)
             quality_measure += qm_dict['qm']
             complete_list.append(qm_dict)
         else:
-            old_reference = update_variance(componentpool, current_reference,db)
-            reference_list.append(old_reference)
+            if not(in_list(row['cid'], reference_list)):
+                old_reference = update_variance(componentpool, current_reference)
+                reference_list.append(old_reference)
+            else :
+                list_item = [item for item in reference_list if item.get('cid',None)==row['cid']] 
+                old_reference = list_item[0]
             qm_dict = validateBounderies(current_reference,old_reference)
             quality_measure += qm_dict['qm']
             complete_list.append(qm_dict)
@@ -49,7 +53,7 @@ def MachineAnalyse(machinedata):
     complete_list = []
     for index, row in component_df.iterrows():
         if row["children"] ==  0:
-            complete_list.append(0)
+            complete_list.append(row['qm'])
         else:
             sum_qm = 0
             sum_qm += row['qm']
@@ -62,6 +66,9 @@ def MachineAnalyse(machinedata):
 
     component_df['qm_total '] = complete_list
     component_df.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/completedata.xlsx")
+
+def in_list(value, list):
+    return any(item.get('cid', None) == value for item in list)
 
 def validate_date(date_str):
     current_date = date.today()
@@ -106,7 +113,7 @@ def summarize_dataset(data):
     component_df.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/component_df.xlsx")
     return component_df
 
-def update_variance(componentpool, current_reference,db):
+def update_variance(componentpool, current_reference):
     #Extraherar liknande komponenter från datapoolen
     if len(componentpool) > 3:
         components = componentpool.loc[0:,['bomitem','children', 'documents']]
@@ -143,6 +150,8 @@ def update_variance(componentpool, current_reference,db):
     return reference
 
 def validateBounderies(curr, old):
+    #print(curr)
+    #print(old)
     validate_list = [(int(curr["documents"]) >= old["minDoc"] and int(curr["documents"]) <= old["maxDoc"]),
                     (int(curr["bomitem"]) >= old["minBom"] and int(curr["bomitem"]) <= old["maxBom"]),
                     (int(curr["children"]) >= old["minChild"]  and int(curr["children"]) <= old["maxChild"])]
