@@ -12,7 +12,7 @@ from datetime import datetime, date
 def MachineAnalyse(machinedata):
     db = dbh.database()
     machine_info = machinedata.iloc[1]
-    component_df =  summarize_dataset(machinedata) #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_dataset(machinedata)
+    component_df =  pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_dataset(machinedata)
     datapool = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/datapool.xlsx")
 
     quality_measure = 0
@@ -32,7 +32,7 @@ def MachineAnalyse(machinedata):
                 old_reference = generate_reference(componentpool, current_reference, db)
                 reference_list.append(old_reference)
             qm_dict = calculate_qm(current_reference,old_reference)
-            quality_measure += qm_dict['qm']
+            quality_measure += qm_dict['qm_total']
             complete_list.append(qm_dict)
         else:
             if not(in_list(row['cid'], reference_list)):
@@ -42,22 +42,22 @@ def MachineAnalyse(machinedata):
                 list_item = [item for item in reference_list if item.get('cid',None)==row['cid']]
                 old_reference = list_item[0]
             qm_dict = calculate_qm(current_reference,old_reference)
-            quality_measure += qm_dict['qm']
+            quality_measure += qm_dict['qm_total']
             complete_list.append(qm_dict)
 
     reference_df = pd.DataFrame( reference_list , columns = [ "cid", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild", "maxDoc","minDoc","meanDoc","maxMat","minMat","meanMat","nrComponents", "date"])
     db.insertList(reference_df.values.tolist())
-    complete_df = pd.DataFrame( complete_list , columns = [ "qm", "qm_doc","qm_bom", "qm_children","qm_material" ])
+    complete_df = pd.DataFrame( complete_list , columns = [ "qm_total", "qm_doc","qm_bom", "qm_children","qm_material" ])
     component_df = pd.concat([component_df,complete_df], axis=1)
 
     #Gå igenom varje nod, kolla hur varje barn är komplett och beräkna ihop
     complete_list = []
     for index, row in component_df.iterrows():
         if row["children"] ==  0:
-            complete_list.append(row['qm'])
+            complete_list.append(row['qm_total'])
         else:
             sum_qm = 0
-            sum_qm += row['qm']
+            sum_qm += row['qm_total']
             total_subnodes = row['children'] + 1
             children = component_df[component_df['parent'] == row['eqnr']]
             node_dict = summarize_node(children, component_df,sum_qm, total_subnodes)
@@ -65,17 +65,17 @@ def MachineAnalyse(machinedata):
             total_subnodes = node_dict['total_subnodes']
             complete_list.append(round((sum_qm/total_subnodes),4))
 
-    component_df['qm_total'] = complete_list
+    component_df['cm'] = complete_list
     new_row = pd.DataFrame({'cid':machine_info['Level'], 'parent':'-', 'children': len(component_df),
                         'documents': component_df['documents'].sum(), 'bomitem':component_df['bomitem'].sum(),
-                        'depth':1, 'eqnr':machine_info['Equipment No'], 'qm':component_df['qm'].sum(),
+                        'depth':1, 'eqnr':machine_info['Equipment No'], 'qm_total':component_df['qm_total'].sum(),
                         'qm_doc':component_df['qm_doc'].sum(), 'qm_bom': component_df['qm_bom'].sum(),
                         'qm_children': component_df['qm_children'].sum(),
                         'qm_material': component_df['qm_material'].sum(),
-                        'qm_total': component_df['qm'].sum()/len(component_df) }, index =[0])
+                        'cm': component_df['qm_total'].sum()/len(component_df) }, index =[0])
 
     component_df = pd.concat([new_row, component_df[:]]).reset_index(drop = True)
-    columns = ['cid','eqnr','depth', 'parent', 'children', 'bomitem', 'documents', 'qm', 'qm_children', 'qm_bom', 'qm_doc','qm_material','qm_total']
+    columns = ['cid','eqnr','depth', 'parent', 'children', 'bomitem', 'documents', 'qm_total', 'qm_children', 'qm_bom', 'qm_doc','qm_material','cm']
     component_df = component_df[columns]
     component_df.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/completedata.xlsx")
 
@@ -90,7 +90,7 @@ def validate_date(date_str):
 
 def summarize_node(children, df, sum_qm, total_subnodes ):
     for index,row in children.iterrows():
-        sum_qm += row['qm']
+        sum_qm += row['qm_total']
         if row['children'] != 0:
             total_subnodes += row['children']
             node_dict = summarize_node(df[df['parent'] == row['eqnr']], df, sum_qm, total_subnodes)
@@ -182,7 +182,7 @@ def calculate_qm(curr, old):
                     (int(curr["materials"]) >= old["minMat"]  and int(curr["materials"]) <= old["maxMat"])]
     qm_dict = {}
     qm_dict.update( {
-    "qm": round((sum(validate_list)/len(validate_list)),4),
+    "qm_total": round((sum(validate_list)/len(validate_list)),4),
     "qm_doc": int(validate_list[0]),
     "qm_bom": int(validate_list[1]),
     "qm_children": int(validate_list[2]),
