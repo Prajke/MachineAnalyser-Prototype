@@ -12,8 +12,8 @@ from datetime import datetime, date
 def MachineAnalyse(machinedata):
     db = dbh.database()
     machine_info = machinedata.iloc[1]
-    component_df =  pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_dataset(machinedata)
-    datapool = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/datapool.xlsx")
+    component_df =  summarize_dataset(machinedata) #pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx") #summarize_dataset(machinedata)
+    datapool = pd.read_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/datapool_E4.xlsx")
 
     quality_measure = 0
     reference_list = []
@@ -29,7 +29,7 @@ def MachineAnalyse(machinedata):
             #Uppdatera referensvärdena om antal komponenter tillgängliga är
             #större än antalet komponenter under förra jämförelsen
             if (int(old_reference['nrComponents']) < len(componentpool)) or not(validate_date(old_reference['date']) or not(in_list(row['cid'], reference_list)) ):
-                old_reference = generate_reference(componentpool, current_reference, db)
+                old_reference = generate_reference(componentpool, old_reference, db)
                 reference_list.append(old_reference)
             qm_dict = calculate_qm(current_reference,old_reference)
             quality_measure += qm_dict['qm_total']
@@ -103,12 +103,18 @@ def summarize_node(children, df, sum_qm, total_subnodes ):
     return node_dict
 
 def summarize_dataset(data):
+    #Gör alla kolumner till rätt datatyp, plocka ut felaktiga värden etc.
+    #Vad gör vi med rader som saknar innehåll?
     machinedata = data.iloc[1:]
     machinedata = machinedata[machinedata["Depth"] > 2]
+    for col in ['Equipment No', 'Depth', 'Parent', 'No of Docs', 'Material No.']:
+        #print(data[col])
+        machinedata[col] = machinedata[col].astype('int64')
     cleanup_nums = {"BOM Item": {"-": 0, "Text": 1, "Document": 2, "Material": 4}}
     machinedata.replace(cleanup_nums, inplace=True)
     uniqueeqnr = machinedata["Equipment No"].unique()
     reference_list = []
+
 
     for id in uniqueeqnr:
         row = {}
@@ -123,16 +129,19 @@ def summarize_dataset(data):
         })
         reference_list.append(row)
     component_df = pd.DataFrame( reference_list , columns = [ "cid", "parent", "children", "documents","materials","bomitem", "depth"])
-    component_df['eqnr'] = uniqueeqnr.astype(int)
+    component_df['eqnr'] = uniqueeqnr.astype('int64')
     component_df.to_excel("C:/Users/nikla/OneDrive/Python/Datascience/AnomalydetectionApplication/componentdata.xlsx")
     return component_df
 
 def generate_reference(componentpool, current_reference, db):
     #Extraherar liknande komponenter från datapoolen
     anomaly_df = pd.DataFrame()
-    if len(componentpool) > 3:
-        components = componentpool.loc[0:,['bomitem','children', 'documents',"materials"]]
-        algorithm = DBSCAN(eps=0.4, metric='euclidean', min_samples=2)
+    #print(len(componentpool))
+    components = componentpool.loc[0:,['bomitem','children', 'documents',"materials"]]
+    #components = components.drop_duplicates()
+    #print(components)
+    if len(components) > 5 :
+        algorithm =  DBSCAN(eps=0.5, metric='euclidean', min_samples=5)
         #LocalOutlierFactor(n_neighbors=20)
         #IsolationForest(n_estimators=100, max_samples='auto')
         #DBSCAN(eps=3, metric='euclidean', min_samples=3)
@@ -140,10 +149,17 @@ def generate_reference(componentpool, current_reference, db):
         result = algorithm.fit_predict(components)
         anomaly_df = components[result == -1]
         normal_df = components[result != -1]
-    elif len(componentpool) == 1:
+    elif (len(components) == 1):
         normal_df = current_reference
     else :
         normal_df = componentpool
+
+    if normal_df.empty:
+        normal_df = current_reference
+        nrComponents = 1
+        #referenses i databasen ska inte ändras!!!!!
+    else :
+        nrComponents = len(components)
 
     if not (anomaly_df.empty):
         anomaly_df['cid'] = current_reference.cid.values[0]
@@ -155,6 +171,7 @@ def generate_reference(componentpool, current_reference, db):
     #current_time = datetime.datetime.now()
     #Skapa en dikt som skickas in till referensbibloteket, baserat på resultatet från modellen
     reference = {}
+    #if not (normal_df.empty):
     reference.update( {
     "cid" : current_reference.cid.values[0],
     "maxBom": int(normal_df.bomitem.max()),
@@ -169,7 +186,7 @@ def generate_reference(componentpool, current_reference, db):
     "maxMat": int(normal_df.materials.max()),
     "minMat": int(normal_df.materials.min()),
     "meanMat":int(round(normal_df.materials.mean(),0)),
-    "nrComponents":len(componentpool),
+    "nrComponents":nrComponents,
     "date": date.today()
     })
 
