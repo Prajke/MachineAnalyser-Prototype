@@ -141,11 +141,21 @@ def generate_reference(componentpool, current_reference, db):
     #components = components.drop_duplicates()
     #print(components)
     if len(components) > 5 :
-        algorithm =  DBSCAN(eps=0.5, metric='euclidean', min_samples=5)
+        if len(components) < 100:
+            eps = 7.9
+            ms = 5
+        elif 99 < len(components) < 1000 :
+            eps = 10
+            ms = 5
+        else:
+            eps = 8.1
+            ms = 23
+
+        algorithm =DBSCAN(eps=eps, metric='euclidean', min_samples=23)
+        #IsolationForest(n_estimators=100, max_samples='auto')
         #LocalOutlierFactor(n_neighbors=20)
         #IsolationForest(n_estimators=100, max_samples='auto')
-        #DBSCAN(eps=3, metric='euclidean', min_samples=3)
-        #algorithm.fit(X)
+        #    algorithm.fit(components)
         result = algorithm.fit_predict(components)
         anomaly_df = components[result == -1]
         normal_df = components[result != -1]
