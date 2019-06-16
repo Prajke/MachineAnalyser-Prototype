@@ -204,6 +204,8 @@ def generate_reference(componentpool, current_reference, db):
     #These are features that used in the algorithm
     components = componentpool.loc[0:,['bomitem','children', 'documents',"materials"]]
 
+    ############################ Anomaly detection method #############################
+    #In this secion the parameters and algorithm/method can be altered or replace
     if len(components) > 5 :
         if len(components) < 100:
             eps = 7.9
@@ -216,6 +218,7 @@ def generate_reference(componentpool, current_reference, db):
             ms = 23
 
         algorithm =DBSCAN(eps=eps, metric='euclidean', min_samples=ms)
+    #################################################################################
         result = algorithm.fit_predict(components)
         anomaly_df = components[result == -1]
         normal_df = components[result != -1]
