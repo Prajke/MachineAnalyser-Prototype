@@ -17,69 +17,31 @@ class database:
         self.connection.close()
 
 ################################################################################
+#Adds a single reference  to the referencelibrary.
 ################################################################################
-    #Validates if a componet exisits in the referencelibrary. If the component
-    #exsists the function returns True, otherwise False.
-    def validateComponent(self, cid):
+    def addReference(self,data):
         try:
-            sql = "SELECT * FROM components WHERE cid = ?"
-            val = (int(cid),)
-            self.cursor.execute(sql,val)
-            row = self.cursor.fetchone()
-            if row == None:
-                return False
-            else:
-                return True
-        except:
-            return 0
-
-################################################################################
-################################################################################
-    #Validates a components bounderies. If the bounderies are within the
-    #bounderies set in the referencelibrary, the function returns True,
-    #otherwise false.
-    def validateBounderies(self, cid, data):
-        try:
-            component = self.getComponent(cid)
-
-            if ( (int(data["documents"]) >= component["minDoc"] and int(data["documents"]) <= component["maxDoc"]) and
-                 (int(data["bomitem"]) >= component["minBom"] and int(data["bomitem"]) <= component["maxBom"]) and
-                 (int(data["children"]) >= component["minChild"] and int(data["children"]) <= component["maxChild"])):
-
-                return True
-            else:
-                return False
-        except:
-            raise Exception("Error at validateBounderies")
-
-################################################################################
-################################################################################
-    #Adds a component to the referencelibrary.
-    def addComponent(self,data):
-        #try:
-            sql = "REPLACE INTO components(cid, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-            values = (data['cid'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
+            sql = "REPLACE INTO components(matnr, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+            values = (data['matnr'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
             self.cursor.execute(sql,values)
             self.db.commit()
             return True
-        ##except:
-        #    return 0
-
+        except:
+            raise Exception("Error at addComponent")
 ################################################################################
+#Get a reference from the referencelibrary
 ################################################################################
-    #Extracts a component from the referencelibrary. Returns a dictionary
-    #containg component bounderies and mean-values for the different features.
-    def getComponent(self, cid):
+    def getReference(self, matnr):
         try:
-            sql = "SELECT * FROM components WHERE cid = ?"
-            val = (cid,)
+            sql = "SELECT * FROM components WHERE matnr = ?"
+            val = (matnr,)
             self.cursor.execute(sql, val)
             row = self.cursor.fetchone()
             if row == None:
                 Component = []
                 return Component
             Component = {
-                "cid":row[0],
+                "matnr":row[0],
                 "maxBom":row[1],
                 "minBom": row[2],
                 "meanBom": row[3],
@@ -99,62 +61,23 @@ class database:
         except:
             raise Exception("Error at GetComponent")
 
-
 ################################################################################
-################################################################################
-    def validateComponentAmount(self,cid,var):
-        try:
-            sql = "SELECT nrComponents FROM components WHERE cid = ?"
-            val = (int(cid),)
-            self.cursor.execute(sql,val)
-            row = self.cursor.fetchone()
-            if row[0] < var:
-                return True
-            else:
-                return False
-        except:
-            return 0
-################################################################################
-################################################################################
-    def changeComponentBounderies(self):
-        print( "HELLO")
-
-################################################################################
+#Inserts a list of components defined as anomalies
 ################################################################################
     def insertAnomalies(self, list):
-        sql = "INSERT INTO anomalies(cid, bomitem, children, documents, materials, date) VALUES(?,?,?,?,?,?)"
-        self.cursor.executemany(sql, list)
-        self.db.commit()
-################################################################################
-################################################################################
-    def getAnomalies(self, cid=None):
-        if (cid==None):
-            sql = "SELECT * FROM anomalies"
-        else:
-            sql = "SELECT * FROM anomalies WHERE cid = ?"
         try:
-            val = (cid)
-            self.cursor.execute(sql,val)
-            data = self.cursor.fetchall()
-            return data
+            sql = "INSERT INTO anomalies(matnr, bomitem, children, documents, materials, date) VALUES(?,?,?,?,?,?)"
+            self.cursor.executemany(sql, list)
+            self.db.commit()
         except:
-            return 0
+            raise Exception("Error at GetComponent")
 ################################################################################
-################################################################################
-    def deleteAnomalies(self, cid=None ):
-        if(cid==None):
-            sql= "TRUNCATE TABLE anomalies"
-        else:
-            sql = "DELETE FROM anomalies WHERE cid = ?"
-        try:
-            val = (cid)
-            self.cursor.execute(sql,val)
-            data = self.cursor.fetchall()
-            return True
-        except:
-            return 0
-
+#Inserts a list of references
+###############################################################################
     def insertList(self, list):
-        sql =  "REPLACE INTO components(cid, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,maxMat,minMat,meanMat,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-        self.cursor.executemany(sql, list)
-        self.db.commit()
+        try:
+            sql =  "REPLACE INTO components(matnr, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,maxMat,minMat,meanMat,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+            self.cursor.executemany(sql, list)
+            self.db.commit()
+        except:
+            raise Exception("Error at insertList")
