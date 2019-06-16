@@ -21,6 +21,7 @@ class database:
 ################################################################################
     def addReference(self,data):
         try:
+            #Edit or add features here:
             sql = "REPLACE INTO components(matnr, meanDoc,meanBom,meanChild,maxDoc,maxBom,maxChild,minDoc,minBom,minChild,nrComponents) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
             values = (data['matnr'], data['meanDoc'],data['meanBom'],data['meanChild'],data['maxDoc'],data['maxBom'],data['maxChild'],data['minDoc'],data['minBom'],data['minChild'],data['nrComponents'])
             self.cursor.execute(sql,values)
@@ -40,6 +41,7 @@ class database:
             if row == None:
                 Component = []
                 return Component
+            #Edit or add features here:
             Component = {
                 "matnr":row[0],
                 "maxBom":row[1],
@@ -66,6 +68,7 @@ class database:
 ################################################################################
     def insertAnomalies(self, list):
         try:
+            #Edit or add features here:
             sql = "INSERT INTO anomalies(matnr, bomitem, children, documents, materials, date) VALUES(?,?,?,?,?,?)"
             self.cursor.executemany(sql, list)
             self.db.commit()
@@ -76,6 +79,7 @@ class database:
 ###############################################################################
     def insertList(self, list):
         try:
+            #Edit or add features here:
             sql =  "REPLACE INTO components(matnr, maxBom,minBom, meanBom,maxChild, minChild, meanChild,maxDoc,minDoc,meanDoc,maxMat,minMat,meanMat,nrComponents,date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
             self.cursor.executemany(sql, list)
             self.db.commit()

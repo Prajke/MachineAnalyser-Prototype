@@ -84,6 +84,7 @@ def MachineAnalyse(machinedata):
             complete_list.append(qm_dict)
 
     #A DataFrame containing all the generated references is created and inserted in the library.
+    #Edit or add features here:
     reference_df = pd.DataFrame( reference_list , columns = [ "matnr", "maxBom","minBom", "meanBom","maxChild", "minChild", "meanChild", "maxDoc","minDoc","meanDoc","maxMat","minMat","meanMat","nrComponents", "date"])
     db.insertList(reference_df.values.tolist())
     #A DataFrame containing the QM for each component is created
@@ -170,7 +171,7 @@ def summarize_dataset(data):
     uniqueeqnr = machinedata["Equipment No"].unique()
     reference_list = []
 
-
+    #Edit or add features here:
     for id in uniqueeqnr:
         row = {}
         row.update( {
@@ -183,6 +184,7 @@ def summarize_dataset(data):
         "depth": machinedata[machinedata["Equipment No"] == id]["Depth"].median()
         })
         reference_list.append(row)
+    #Edit or add features here:
     component_df = pd.DataFrame( reference_list , columns = [ "matnr", "parent", "children", "documents","materials","bomitem", "depth"])
     component_df['eqnr'] = uniqueeqnr.astype('int64')
 
@@ -198,6 +200,8 @@ def generate_reference(componentpool, current_reference, db):
     anomaly_df = pd.DataFrame()
     normal_df = pd.DataFrame()
 
+    #Edit or add features here:
+    #These are features that used in the algorithm
     components = componentpool.loc[0:,['bomitem','children', 'documents',"materials"]]
 
     if len(components) > 5 :
@@ -233,6 +237,7 @@ def generate_reference(componentpool, current_reference, db):
         anomaly_df = anomaly_df[columns]
         db.insertAnomalies(anomaly_df.values.tolist())
 
+    #Edit or add features here:
     reference = {}
     reference.update( {
     "matnr" : current_reference.matnr.values[0],
@@ -256,11 +261,13 @@ def generate_reference(componentpool, current_reference, db):
 
 #Calculates the QM based on a comparison of two references
 def calculate_qm(curr, old):
+    #Edit or add features here:
     validate_list = [(int(curr["documents"]) >= old["minDoc"] and int(curr["documents"]) <= old["maxDoc"]),
                     (int(curr["bomitem"]) >= old["minBom"] and int(curr["bomitem"]) <= old["maxBom"]),
                     (int(curr["children"]) >= old["minChild"]  and int(curr["children"]) <= old["maxChild"]),
                     (int(curr["materials"]) >= old["minMat"]  and int(curr["materials"]) <= old["maxMat"])]
     qm_dict = {}
+    #Edit or add features here:
     qm_dict.update( {
     "qm_total": round((sum(validate_list)/len(validate_list)),4),
     "qm_doc": int(validate_list[0]),
