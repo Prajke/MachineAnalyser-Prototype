@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS `components`(
-	`cid`	INT NOT NULL UNIQUE,
+	`matno`	INT NOT NULL UNIQUE,
   	`maxBom`	INT NOT NULL,
 	`minBom`	INT NOT NULL,
 	`meanBom`	INT NOT NULL,
 	`maxChild`	INT NOT NULL,
-`minChild`	INT NOT NULL,
+	`minChild`	INT NOT NULL,
 	`meanChild`INT NOT NULL,
 	`maxDoc`	INT NOT NULL,
 	`minDoc`	INT NOT NULL,
@@ -17,6 +17,6 @@ CREATE TABLE IF NOT EXISTS `components`(
 );
 
 CREATE TABLE IF NOT EXISTS `anomalies`(
-	`cid` TEXT NOT NULL,
+	`matno` TEXT NOT NULL,
 	`revison` INT NOT NULL
 );
